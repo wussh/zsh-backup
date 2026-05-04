@@ -57,8 +57,8 @@ _manifest_update() {
         # Update existing entry
         local tmp
         tmp="$(mktemp)"
-        grep -vF "$source_path" "$manifest" > "$tmp"
-        echo -e "${store_rel}\t${source_path}" >> "$tmp"
+        grep -vF "$source_path" "$manifest" > "$tmp" || true
+        printf "%s\t%s\n" "$store_rel" "$source_path" >> "$tmp"
         mv "$tmp" "$manifest"
     else
         echo -e "${store_rel}\t${source_path}" >> "$manifest"
@@ -132,7 +132,7 @@ untrack_file() {
     # Remove from manifest
     local tmp
     tmp="$(mktemp)"
-    grep -vF "$source_path" "$manifest" > "$tmp"
+    grep -vF "$source_path" "$manifest" > "$tmp" || true
     mv "$tmp" "$manifest"
 
     echo "INFO: Untracked $source_path"

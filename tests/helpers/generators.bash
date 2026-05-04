@@ -49,7 +49,19 @@ gen_sensitive_filename() {
         "cert.pfx"
     )
     local idx=$(( RANDOM % ${#patterns[@]} ))
-    echo "${patterns[$idx]}_$(gen_random_string 4)"
+    local base="${patterns[$idx]}"
+    case "$base" in
+        ".env"|".netrc")
+            echo "$base"
+            ;;
+        id_rsa|id_ed25519|id_ecdsa|id_dsa|*.pem|*.key|*.p12|*.pfx)
+            # Keep suffix-sensitive patterns at filename end.
+            echo "$(gen_random_string 4)_${base}"
+            ;;
+        *)
+            echo "${base}_$(gen_random_string 4)"
+            ;;
+    esac
 }
 
 # gen_safe_filename: generates a filename that does NOT match any sensitive pattern.

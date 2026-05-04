@@ -130,7 +130,7 @@ restore_all_symlinks() {
                 fi
             done
             if [ "$in_profile" = "false" ]; then
-                ((skipped++))
+                skipped=$((skipped + 1))
                 continue
             fi
         fi
@@ -143,19 +143,19 @@ restore_all_symlinks() {
         local store_abs="${DOTFILES_DIR}/${store_rel}"
         if [ ! -e "$store_abs" ]; then
             echo "WARNING: Store file missing: $store_abs — skipping." >&2
-            ((skipped++))
+            skipped=$((skipped + 1))
             continue
         fi
 
         if validate_symlink "$target_path" "$store_abs"; then
             echo "INFO: Already linked: $target_path"
-            ((skipped++))
+            skipped=$((skipped + 1))
         elif [ -L "$target_path" ]; then
             update_symlink "$store_abs" "$target_path" "$dry_run"
-            ((updated++))
+            updated=$((updated + 1))
         else
             create_symlink "$store_abs" "$target_path" "$dry_run"
-            ((created++))
+            created=$((created + 1))
         fi
     done < "$manifest"
 
