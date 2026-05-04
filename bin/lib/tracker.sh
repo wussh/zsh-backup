@@ -11,12 +11,13 @@ MANIFEST_FILE="${DOTFILES_DIR}/files/manifest.txt"
 # Outputs the store-relative path (e.g. files/zsh/.zshrc)
 get_store_path() {
     local source_path="$1"
+    local user_home="${DOTFILES_TARGET_HOME:-$HOME}"
 
     # Resolve to absolute path
     source_path="$(realpath -m "$source_path")"
 
-    # Strip $HOME prefix to get home-relative path
-    local rel_path="${source_path#"$HOME"/}"
+    # Strip target home prefix to get home-relative path
+    local rel_path="${source_path#"$user_home"/}"
 
     # Map known dotfiles to category subdirectories
     local basename

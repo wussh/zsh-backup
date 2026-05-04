@@ -1,0 +1,2 @@
+Host wush.vrugutuhu.xyz
+    ProxyCommand cloudflared access ssh --hostname %h

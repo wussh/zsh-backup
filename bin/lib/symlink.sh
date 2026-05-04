@@ -135,10 +135,11 @@ restore_all_symlinks() {
             fi
         fi
 
-        # Normalize source_path: substitute $HOME prefix for portability
-        local target_path="${source_path/#\/home\/*\///"$HOME"/}"
-        # Simple substitution: replace home prefix
-        target_path="$(echo "$source_path" | sed "s|^/home/[^/]*/|$HOME/|")"
+        # Normalize source_path for current machine user home.
+        # When invoked via sudo, DOTFILES_TARGET_HOME should point to the invoking user's home.
+        local user_home="${DOTFILES_TARGET_HOME:-$HOME}"
+        local target_path
+        target_path="$(echo "$source_path" | sed "s|^/home/[^/]*/|$user_home/|")"
 
         local store_abs="${DOTFILES_DIR}/${store_rel}"
         if [ ! -e "$store_abs" ]; then

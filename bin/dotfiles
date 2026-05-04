@@ -15,6 +15,30 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 export DOTFILES_DIR="${DOTFILES_DIR:-$(dirname "$SCRIPT_DIR")}"
 
+# Resolve the target home directory (important when invoked via sudo).
+# - Normal run: target home is $HOME.
+# - sudo run: target home is the invoking user's home (SUDO_USER), not /root.
+resolve_target_home() {
+    if [ -n "${DOTFILES_TARGET_HOME:-}" ]; then
+        echo "$DOTFILES_TARGET_HOME"
+        return 0
+    fi
+
+    if [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ]; then
+        local sudo_home
+        sudo_home="$(getent passwd "$SUDO_USER" 2>/dev/null | awk -F: '{print $6}')"
+        if [ -n "$sudo_home" ]; then
+            echo "$sudo_home"
+            return 0
+        fi
+    fi
+
+    echo "$HOME"
+}
+
+export DOTFILES_TARGET_HOME
+DOTFILES_TARGET_HOME="$(resolve_target_home)"
+
 # Source library modules
 LIB_DIR="${SCRIPT_DIR}/lib"
 # shellcheck source=bin/lib/config.sh
@@ -184,17 +208,18 @@ cmd_init() {
     # Track default zsh and tool config files (skip missing ones)
     load_exclusions
     local exit_code=0
+    local target_home="${DOTFILES_TARGET_HOME:-$HOME}"
     local default_files=(
-        "${HOME}/.zshrc"
-        "${HOME}/.zprofile"
-        "${HOME}/.zshenv"
-        "${HOME}/.zsh_aliases"
-        "${HOME}/.zsh_functions"
-        "${HOME}/.gitconfig"
-        "${HOME}/.vimrc"
-        "${HOME}/.config/nvim"
-        "${HOME}/.tmux.conf"
-        "${HOME}/.ssh/config"
+        "${target_home}/.zshrc"
+        "${target_home}/.zprofile"
+        "${target_home}/.zshenv"
+        "${target_home}/.zsh_aliases"
+        "${target_home}/.zsh_functions"
+        "${target_home}/.gitconfig"
+        "${target_home}/.vimrc"
+        "${target_home}/.config/nvim"
+        "${target_home}/.tmux.conf"
+        "${target_home}/.ssh/config"
     )
     for f in "${default_files[@]}"; do
         if [ -e "$f" ]; then

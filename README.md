@@ -20,6 +20,8 @@ It tracks config files in this repo, symlinks them into your home directory, and
 ./bin/dotfiles status
 ```
 
+Run `dotfiles` as your normal user (`wush`), not with `sudo`.
+
 ### New machine bootstrap
 
 ```sh
@@ -92,7 +94,13 @@ Environment variables with the same names override file values.
 If cloned from GitHub with a standard command, use:
 
 ```txt
-~/zsh-backup
+/home/wush/zsh-backup
+```
+
+If your clone is in the current workspace:
+
+```txt
+/home/wush/playground/zsh-backup
 ```
 
 ## Git User Setup
@@ -102,6 +110,12 @@ If git identity is not configured yet, set it once:
 ```sh
 git config --global user.name "wussh"
 git config --global user.email "you@example.com"
+```
+
+If you previously ran commands with `sudo` and got permission errors, fix ownership once:
+
+```sh
+sudo chown -R wush:wush /home/wush/playground/zsh-backup
 ```
 
 ## Sensitive Files

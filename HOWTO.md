@@ -11,6 +11,8 @@ cd ~/zsh-backup
 ./bin/dotfiles init
 ```
 
+Use your normal user shell (`wush`) and do not run `dotfiles` with `sudo`.
+
 Optionally set a remote for backup/push:
 
 ```sh
@@ -167,4 +169,12 @@ If git identity is missing on a machine, set it before `dotfiles backup`:
 ```sh
 git config --global user.name "wussh"
 git config --global user.email "you@example.com"
+```
+
+## 10) Fix Permissions After Running sudo (If Needed)
+
+If you see errors like `Permission denied` when writing files in the repo:
+
+```sh
+sudo chown -R wush:wush /home/wush/playground/zsh-backup
 ```
