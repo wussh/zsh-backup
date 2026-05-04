@@ -1,118 +1,140 @@
 # Dotfiles Manager
 
-A portable dotfiles management system that backs up zsh and other tool configurations, stores them in a version-controlled repository, and restores the full environment on a new machine with a single command.
+Portable dotfiles management for zsh and CLI tools.  
+It tracks config files in this repo, symlinks them into your home directory, and restores them on another machine.
 
-## Quick Start (New Machine)
+## What this project provides
+
+- `bin/dotfiles`: main CLI (`add`, `backup`, `restore`, `sync`, `status`, `profile`, `init`)
+- `bin/bootstrap.sh`: one-command bootstrap for a fresh machine
+- `profiles/`: profile manifests (`default`, `personal`, `server`, `work`)
+- `config/exclusions.txt`: sensitive-file exclusion patterns
+- `plugins.txt` and `tools.txt`: plugin/tool manifests
+
+## Quick Start
+
+### Existing machine (this repo already cloned)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/bin/bootstrap.sh | sh
+./bin/dotfiles init
+./bin/dotfiles status
 ```
 
-Or with a specific profile:
+### New machine bootstrap
 
 ```sh
-DOTFILES_REMOTE=https://github.com/YOUR_USERNAME/dotfiles.git \
-DOTFILES_PROFILE=server \
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/bin/bootstrap.sh | sh
+DOTFILES_REMOTE="https://github.com/wussh/zsh-backup.git" \
+curl -fsSL https://raw.githubusercontent.com/wussh/zsh-backup/main/bin/bootstrap.sh | sh
 ```
 
-## Installation (Existing Machine)
+With a specific profile:
 
 ```sh
-git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
-./bin/dotfiles init --remote https://github.com/YOUR_USERNAME/dotfiles.git
+DOTFILES_REMOTE="https://github.com/wussh/zsh-backup.git" \
+DOTFILES_PROFILE="server" \
+curl -fsSL https://raw.githubusercontent.com/wussh/zsh-backup/main/bin/bootstrap.sh | sh
+```
+
+## Basic Usage
+
+Use `./bin/dotfiles` directly, or add `bin/` to your `PATH`.
+
+### Track files
+
+```sh
+./bin/dotfiles add ~/.zshrc
+./bin/dotfiles add ~/.gitconfig
+```
+
+### Backup tracked changes (git commit + optional push)
+
+```sh
+./bin/dotfiles backup
+```
+
+### Restore links on current machine
+
+```sh
 ./bin/dotfiles restore
+./bin/dotfiles restore --dry-run
+./bin/dotfiles restore --profile server
 ```
 
-## Usage
-
-### Track a new config file
+### Sync (backup then restore)
 
 ```sh
-dotfiles add ~/.zshrc
-dotfiles add ~/.gitconfig
+./bin/dotfiles sync
 ```
 
-### Backup changes to remote
+### Status and profiles
 
 ```sh
-dotfiles backup
+./bin/dotfiles status
+./bin/dotfiles profile list
+./bin/dotfiles profile use personal
 ```
-
-### Restore configs on this machine
-
-```sh
-dotfiles restore
-dotfiles restore --dry-run          # Preview without making changes
-dotfiles restore --profile server   # Use a specific profile
-```
-
-### Sync (backup + restore)
-
-```sh
-dotfiles sync
-```
-
-### Check status
-
-```sh
-dotfiles status
-```
-
-### Manage profiles
-
-```sh
-dotfiles profile list
-dotfiles profile use personal
-```
-
-### Initialize a new Config_Store
-
-```sh
-dotfiles init
-dotfiles init --remote https://github.com/YOUR_USERNAME/dotfiles.git
-```
-
-## Profiles
-
-| Profile  | Description                              |
-|----------|------------------------------------------|
-| default  | All standard zsh and tool configs        |
-| personal | Full tool set for personal machines      |
-| server   | Minimal set for headless servers         |
-| work     | Work machine configuration               |
 
 ## Configuration
 
-Edit `config/dotfiles.conf` to set defaults:
+Default config lives in `config/dotfiles.conf`:
 
 ```sh
-DOTFILES_REMOTE="https://github.com/YOUR_USERNAME/dotfiles.git"
+DOTFILES_REMOTE=""
 DOTFILES_PROFILE="default"
 DOTFILES_PLUGIN_MANAGER="zinit"
 DOTFILES_BRANCH="main"
 ```
 
-All values can be overridden with environment variables of the same name.
+Environment variables with the same names override file values.
+
+## Local Repo Path
+
+If cloned from GitHub with a standard command, use:
+
+```txt
+~/zsh-backup
+```
+
+## Git User Setup
+
+If git identity is not configured yet, set it once:
+
+```sh
+git config --global user.name "wussh"
+git config --global user.email "you@example.com"
+```
 
 ## Sensitive Files
 
-Files matching patterns in `config/exclusions.txt` (e.g., `*_rsa`, `*.pem`, `*secret*`) will require explicit confirmation before being tracked. The `.gitignore` also excludes these patterns from git.
+Patterns in `config/exclusions.txt` are treated as sensitive (`*_rsa`, `*_ed25519`, `*.pem`, `*.key`, `*secret*`, etc.).  
+When you try to track a matching file, the CLI asks for explicit confirmation.
 
-## Plugins
+## Plugins and Tools
 
-Edit `plugins.txt` to declare zsh plugins (one per line, GitHub `owner/repo` format or full URL).
-
-## Tools
-
-Edit `tools.txt` to declare CLI tools to install during bootstrap (one per line).
+- Edit `plugins.txt` to define zsh plugins (one per line).
+- Edit `tools.txt` to define CLI tools for bootstrap installs.
 
 ## Testing
 
+Run all tests:
+
 ```sh
-make test-unit        # Run unit tests
-make test-property    # Run property-based tests
-make test-integration # Run integration tests (requires Docker)
-make test-all         # Run all tests
+./run_tests.sh
 ```
+
+Run specific suites:
+
+```sh
+./bats-core/bin/bats tests/unit
+./bats-core/bin/bats tests/property
+./bats-core/bin/bats tests/integration
+```
+
+## How-To Guide
+
+See `HOWTO.md` for step-by-step workflows:
+
+- first-time setup on current machine
+- daily backup/sync workflow
+- moving to a new machine
+- adding custom exclusions and profiles
