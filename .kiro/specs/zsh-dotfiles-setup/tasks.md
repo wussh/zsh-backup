@@ -13,11 +13,11 @@
   - [x] 1.8 Create `plugins.txt` and `tools.txt` manifests with example entries and comment documentation
   - [x] 1.9 Create `README.md` with usage instructions and bootstrap command
 
-- [-] 2. Config Loader (`bin/lib/config.sh`)
-  - [-] 2.1 Implement `load_config()` that sources `config/dotfiles.conf` and applies environment variable overrides
-  - [ ] 2.2 Implement `get_config(key)` and `set_config(key, value)` functions
-  - [ ] 2.3 Implement `init_config()` that creates a default `dotfiles.conf` if none exists
-  - [ ] 2.4 Write unit tests for config loading with env var override precedence
+- [x] 2. Config Loader (`bin/lib/config.sh`)
+  - [x] 2.1 Implement `load_config()` that sources `config/dotfiles.conf` and applies environment variable overrides
+  - [x] 2.2 Implement `get_config(key)` and `set_config(key, value)` functions
+  - [x] 2.3 Implement `init_config()` that creates a default `dotfiles.conf` if none exists
+  - [x] 2.4 Write unit tests for config loading with env var override precedence
 
 - [ ] 3. Sensitive File Filter (`bin/lib/sensitive.sh`)
   - [ ] 3.1 Implement `load_exclusions()` that reads default patterns from `config/exclusions.txt`

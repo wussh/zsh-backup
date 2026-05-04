@@ -1,0 +1,18 @@
+# CLI Tools Manifest
+# One tool per line. Lines starting with # are comments.
+# Format: <command_name> or <command_name>:<package_name>
+# The optional :<package_name> allows the install name to differ from the command name.
+# Example: ripgrep package installs the 'rg' command, so use: rg:ripgrep
+#
+# Examples:
+#   fzf
+#   rg:ripgrep
+#   bat
+#   eza
+
+fzf
+rg:ripgrep
+bat
+eza
+gh
+jq

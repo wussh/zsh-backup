@@ -1,0 +1,24 @@
+name: default
+description: Default profile with all standard zsh and tool configuration files
+extends: null
+files:
+  - zsh/.zshrc
+  - zsh/.zprofile
+  - zsh/.zshenv
+  - zsh/.zsh_aliases
+  - zsh/.zsh_functions
+  - git/.gitconfig
+  - vim/.vimrc
+  - nvim/init.vim
+  - tmux/.tmux.conf
+  - ssh/config
+tools:
+  - zsh
+  - git
+  - vim
+  - tmux
+  - fzf
+  - ripgrep
+  - bat
+  - eza
+exclude_tools: []

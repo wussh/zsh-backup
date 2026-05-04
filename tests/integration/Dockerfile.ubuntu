@@ -1,0 +1,27 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DOTFILES_REMOTE=""
+ENV DOTFILES_PROFILE="default"
+ENV DOTFILES_DIR="/root/.dotfiles"
+
+RUN apt-get update && apt-get install -y \
+    bash \
+    curl \
+    git \
+    zsh \
+    bats \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up git identity
+RUN git config --global user.email "test@test.com" && \
+    git config --global user.name "Test User"
+
+# Copy the dotfiles repo into the container
+COPY . /root/.dotfiles
+
+RUN chmod +x /root/.dotfiles/bin/dotfiles /root/.dotfiles/bin/bootstrap.sh
+
+WORKDIR /root
+
+CMD ["bash"]

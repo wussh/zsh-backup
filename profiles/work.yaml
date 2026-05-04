@@ -1,0 +1,25 @@
+name: work
+description: Work machine profile
+extends: default
+files:
+  - zsh/.zshrc
+  - zsh/.zprofile
+  - zsh/.zshenv
+  - zsh/.zsh_aliases
+  - zsh/.zsh_functions
+  - git/.gitconfig
+  - vim/.vimrc
+  - nvim/init.vim
+  - tmux/.tmux.conf
+  - ssh/config
+tools:
+  - zsh
+  - git
+  - vim
+  - neovim
+  - tmux
+  - fzf
+  - ripgrep
+  - bat
+  - eza
+exclude_tools: []

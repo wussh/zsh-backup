@@ -1,0 +1,29 @@
+FROM alpine:3.19
+
+RUN apk add --no-cache \
+    bash \
+    curl \
+    git \
+    zsh \
+    bats \
+    coreutils \
+    findutils \
+    grep \
+    sed \
+    gawk
+
+# Set up git identity
+RUN git config --global user.email "test@test.com" && \
+    git config --global user.name "Test User"
+
+# Copy the dotfiles repo into the container
+COPY . /root/.dotfiles
+
+RUN chmod +x /root/.dotfiles/bin/dotfiles /root/.dotfiles/bin/bootstrap.sh
+
+ENV DOTFILES_DIR="/root/.dotfiles"
+ENV DOTFILES_PROFILE="default"
+
+WORKDIR /root
+
+CMD ["bash"]

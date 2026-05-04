@@ -1,0 +1,24 @@
+name: server
+description: Headless server environment - excludes GUI-only tools and configs
+extends: default
+files:
+  - zsh/.zshrc
+  - zsh/.zprofile
+  - zsh/.zshenv
+  - zsh/.zsh_aliases
+  - zsh/.zsh_functions
+  - git/.gitconfig
+  - vim/.vimrc
+  - tmux/.tmux.conf
+  - ssh/config
+tools:
+  - zsh
+  - git
+  - vim
+  - tmux
+  - fzf
+  - ripgrep
+exclude_tools:
+  - gui-apps
+  - bat
+  - eza

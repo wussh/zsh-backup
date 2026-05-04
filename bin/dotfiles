@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+# bin/dotfiles
+# Main CLI entry point for the Dotfiles Manager.
+# Usage: dotfiles <subcommand> [options]
+#
+# Exit codes:
+#   0 - complete success
+#   1 - partial success (warnings, skipped items)
+#   2 - fatal error
+
+set -euo pipefail
+
+# Resolve DOTFILES_DIR as the directory containing this script's parent
+# (i.e. the Config_Store root).
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+export DOTFILES_DIR="${DOTFILES_DIR:-$(dirname "$SCRIPT_DIR")}"
+
+# Source library modules
+LIB_DIR="${SCRIPT_DIR}/lib"
+# shellcheck source=bin/lib/config.sh
+. "${LIB_DIR}/config.sh"
+# shellcheck source=bin/lib/sensitive.sh
+. "${LIB_DIR}/sensitive.sh"
+# shellcheck source=bin/lib/tracker.sh
+. "${LIB_DIR}/tracker.sh"
+# shellcheck source=bin/lib/symlink.sh
+. "${LIB_DIR}/symlink.sh"
+# shellcheck source=bin/lib/profile.sh
+. "${LIB_DIR}/profile.sh"
+# shellcheck source=bin/lib/git.sh
+. "${LIB_DIR}/git.sh"
+
+# Load configuration (env vars take precedence over file)
+load_config
+
+# ---------------------------------------------------------------------------
+# Subcommand handlers
+# ---------------------------------------------------------------------------
+
+cmd_add() {
+    local path="$1"
+
+    if [ -z "$path" ]; then
+        echo "Usage: dotfiles add <path>" >&2
+        exit 2
+    fi
+
+    load_exclusions
+
+    track_file "$path"
+    local track_rc=$?
+    if [ "$track_rc" -ne 0 ]; then
+        exit "$track_rc"
+    fi
+
+    local store_rel
+    store_rel="$(get_store_path "$path")"
+    local store_abs="${DOTFILES_DIR}/${store_rel}"
+    local target_path="$path"
+
+    create_symlink "$store_abs" "$target_path"
+}
+
+cmd_backup() {
+    local timestamp
+    timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+
+    git_commit "dotfiles backup: ${timestamp}"
+    local commit_rc=$?
+
+    if [ -n "${DOTFILES_REMOTE:-}" ]; then
+        git_push origin "${DOTFILES_BRANCH:-main}" || exit 2
+    fi
+
+    exit "${commit_rc}"
+}
+
+cmd_restore() {
+    local dry_run="false"
+    local profile="${DOTFILES_PROFILE:-default}"
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --dry-run) dry_run="true" ;;
+            --profile) shift; profile="$1" ;;
+            *) echo "Unknown option: $1" >&2; exit 2 ;;
+        esac
+        shift
+    done
+
+    # Pull latest if remote configured
+    if [ -n "${DOTFILES_REMOTE:-}" ] && [ "$dry_run" = "false" ]; then
+        git_pull origin "${DOTFILES_BRANCH:-main}" || exit 2
+    fi
+
+    restore_all_symlinks "$profile" "$dry_run"
+}
+
+cmd_sync() {
+    cmd_backup
+    cmd_restore "$@"
+}
+
+cmd_status() {
+    local manifest="${DOTFILES_DIR}/files/manifest.txt"
+
+    if [ ! -f "$manifest" ]; then
+        echo "No files are being tracked yet. Run 'dotfiles add <path>' to start."
+        exit 0
+    fi
+
+    printf "%-50s %-10s\n" "SOURCE PATH" "STATUS"
+    printf "%-50s %-10s\n" "-------------------------------------------" "----------"
+
+    while IFS=$'\t' read -r store_rel source_path; do
+        case "$store_rel" in ''|\#*) continue ;; esac
+        local store_abs="${DOTFILES_DIR}/${store_rel}"
+        local status
+
+        if validate_symlink "$source_path" "$store_abs"; then
+            status="OK"
+        elif [ -L "$source_path" ]; then
+            status="WRONG_LINK"
+        elif [ -e "$source_path" ]; then
+            status="REGULAR_FILE"
+        else
+            status="MISSING"
+        fi
+
+        printf "%-50s %-10s\n" "$source_path" "$status"
+    done < "$manifest"
+}
+
+cmd_profile() {
+    local subcmd="${1:-list}"
+    shift || true
+
+    case "$subcmd" in
+        list)
+            list_profiles
+            ;;
+        use)
+            local name="${1:-}"
+            if [ -z "$name" ]; then
+                echo "Usage: dotfiles profile use <name>" >&2
+                exit 2
+            fi
+            set_config "DOTFILES_PROFILE" "$name"
+            echo "INFO: Active profile set to '$name'"
+            ;;
+        *)
+            echo "Usage: dotfiles profile [list|use <name>]" >&2
+            exit 2
+            ;;
+    esac
+}
+
+cmd_init() {
+    local remote=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --remote) shift; remote="$1" ;;
+            *) echo "Unknown option: $1" >&2; exit 2 ;;
+        esac
+        shift
+    done
+
+    git_init "$DOTFILES_DIR"
+    init_config
+
+    if [ -n "$remote" ]; then
+        git_set_remote "$remote"
+        set_config "DOTFILES_REMOTE" "$remote"
+    fi
+
+    # Create default manifest if missing
+    local manifest="${DOTFILES_DIR}/files/manifest.txt"
+    if [ ! -f "$manifest" ]; then
+        mkdir -p "${DOTFILES_DIR}/files"
+        touch "$manifest"
+        echo "INFO: Created empty manifest at $manifest"
+    fi
+
+    # Track default zsh and tool config files (skip missing ones)
+    load_exclusions
+    local exit_code=0
+    local default_files=(
+        "${HOME}/.zshrc"
+        "${HOME}/.zprofile"
+        "${HOME}/.zshenv"
+        "${HOME}/.zsh_aliases"
+        "${HOME}/.zsh_functions"
+        "${HOME}/.gitconfig"
+        "${HOME}/.vimrc"
+        "${HOME}/.config/nvim"
+        "${HOME}/.tmux.conf"
+        "${HOME}/.ssh/config"
+    )
+    for f in "${default_files[@]}"; do
+        if [ -e "$f" ]; then
+            track_file "$f" || exit_code=1
+        else
+            echo "WARNING: Skipping $f — file does not exist." >&2
+            exit_code=1
+        fi
+    done
+
+    exit "$exit_code"
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch
+# ---------------------------------------------------------------------------
+
+usage() {
+    cat <<'EOF'
+Usage: dotfiles <subcommand> [options]
+
+Subcommands:
+  add <path>                    Track a file or directory
+  backup                        Commit and push all changes
+  restore [--dry-run]           Pull and re-apply all symlinks
+           [--profile <name>]
+  sync                          Run backup then restore
+  status                        Show tracked files and symlink status
+  profile list                  List available profiles
+  profile use <name>            Set the active profile
+  init [--remote <url>]         Initialize a new Config_Store
+
+Exit codes: 0=success  1=warnings  2=fatal
+EOF
+}
+
+SUBCOMMAND="${1:-}"
+shift || true
+
+case "$SUBCOMMAND" in
+    add)     cmd_add "$@" ;;
+    backup)  cmd_backup "$@" ;;
+    restore) cmd_restore "$@" ;;
+    sync)    cmd_sync "$@" ;;
+    status)  cmd_status "$@" ;;
+    profile) cmd_profile "$@" ;;
+    init)    cmd_init "$@" ;;
+    help|--help|-h) usage; exit 0 ;;
+    *)
+        echo "ERROR: Unknown subcommand: '${SUBCOMMAND}'" >&2
+        usage >&2
+        exit 2
+        ;;
+esac

@@ -1,0 +1,12 @@
+# Zsh Plugin Manifest
+# One plugin per line. Lines starting with # are comments.
+# Format: <owner>/<repo> for GitHub shorthand, or full https:// URL
+#
+# Examples:
+#   zsh-users/zsh-autosuggestions
+#   https://github.com/romkatv/powerlevel10k
+
+zsh-users/zsh-autosuggestions
+zsh-users/zsh-syntax-highlighting
+zsh-users/zsh-completions
+romkatv/powerlevel10k
