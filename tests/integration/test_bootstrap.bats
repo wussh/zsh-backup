@@ -15,6 +15,13 @@ setup() {
 
     # Copy repo into DOTFILES_DIR
     cp -r "${REPO_ROOT}/." "$DOTFILES_DIR/"
+    rm -rf "${DOTFILES_DIR}/.git"
+
+    # Disable remote git operations in tests
+    export DOTFILES_REMOTE=""
+    if [ -f "${DOTFILES_DIR}/config/dotfiles.conf" ]; then
+        sed -i 's/^DOTFILES_REMOTE=.*/DOTFILES_REMOTE=""/' "${DOTFILES_DIR}/config/dotfiles.conf"
+    fi
 
     export PATH="${DOTFILES_DIR}/bin:$PATH"
 
