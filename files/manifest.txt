@@ -3,3 +3,5 @@ files/ssh/config	/home/wush/.ssh/config
 files/zsh/.zshrc	/home/wush/.zshrc
 files/.p10k.zsh	/home/wush/.p10k.zsh
 files/git/.gitconfig	/home/wush/.gitconfig
+files/playground/zsh-backup/files/zsh/.zshrc	/home/wush/playground/zsh-backup/files/zsh/.zshrc
+files/playground/zsh-backup/files/.p10k.zsh	/home/wush/playground/zsh-backup/files/.p10k.zsh
