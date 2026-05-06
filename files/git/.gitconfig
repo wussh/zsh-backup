@@ -80,5 +80,6 @@
 	directory = /home/wush/bri/script/bamboo-simulator
 	directory = /home/wush/playground/ezbookkeeping
 	directory = /home/wush/playground/zsh-backup
+	directory = /home/wush/playground/ios-build
 [credential]
 	helper = store

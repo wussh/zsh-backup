@@ -132,4 +132,6 @@ source_lib() {
     . "${lib_root}/symlink.sh"
     . "${lib_root}/profile.sh"
     . "${lib_root}/git.sh"
+    . "${lib_root}/plugins.sh"
+    . "${lib_root}/packages.sh"
 }

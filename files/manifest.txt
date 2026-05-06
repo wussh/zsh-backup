@@ -1,4 +1,5 @@
 files/git/.gitconfig	/root/.gitconfig
-files/zsh/.zshrc	/home/wush/.zshrc
-files/git/.gitconfig	/home/wush/.gitconfig
 files/ssh/config	/home/wush/.ssh/config
+files/zsh/.zshrc	/home/wush/.zshrc
+files/.p10k.zsh	/home/wush/.p10k.zsh
+files/git/.gitconfig	/home/wush/.gitconfig
